@@ -1,4 +1,5 @@
 {
+  "id": "clickhouse",
   "name": "clickhouse",
   "displayName": "ClickHouse",
   "version": "1.0.0",
