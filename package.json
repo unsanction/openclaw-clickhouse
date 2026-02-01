@@ -1,0 +1,42 @@
+{
+  "name": "@unstanction/openclaw-clickhouse",
+  "version": "1.0.0",
+  "description": "OpenClaw plugin for ClickHouse database integration",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "openclaw.plugin.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "openclaw",
+    "clickhouse",
+    "database",
+    "plugin",
+    "ai",
+    "agent"
+  ],
+  "author": "unstanction",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unstanction/openclaw-clickhouse.git"
+  },
+  "bugs": {
+    "url": "https://github.com/unstanction/openclaw-clickhouse/issues"
+  },
+  "homepage": "https://github.com/unstanction/openclaw-clickhouse#readme",
+  "dependencies": {
+    "@clickhouse/client": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "name": "clickhouse",
+  "displayName": "ClickHouse",
+  "version": "1.0.0",
+  "description": "Connect to ClickHouse databases - list databases, tables, run queries, and insert data",
+  "author": "unstanction",
+  "main": "dist/index.js",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "host": {
+        "type": "string",
+        "description": "ClickHouse server host"
+      },
+      "port": {
+        "type": "number",
+        "default": 8123,
+        "description": "ClickHouse server port (8123 for HTTP, 8443 for HTTPS)"
+      },
+      "username": {
+        "type": "string",
+        "default": "default",
+        "description": "ClickHouse username"
+      },
+      "password": {
+        "type": "string",
+        "default": "",
+        "description": "ClickHouse password"
+      },
+      "database": {
+        "type": "string",
+        "default": "default",
+        "description": "Default database to use"
+      },
+      "secure": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use HTTPS connection"
+      },
+      "readonly": {
+        "type": "boolean",
+        "default": true,
+        "description": "Enable read-only mode (blocks INSERT/UPDATE/DELETE)"
+      },
+      "allowedOperations": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["select", "insert", "listDatabases", "listTables", "describeTable"]
+        },
+        "description": "List of allowed operations. If not specified, all operations are allowed based on readonly setting"
+      },
+      "queryTimeout": {
+        "type": "number",
+        "default": 30000,
+        "description": "Query timeout in milliseconds"
+      }
+    },
+    "required": ["host"]
+  }
+}
