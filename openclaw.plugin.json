@@ -1,8 +1,8 @@
 {
-  "id": "clickhouse",
-  "name": "clickhouse",
+  "id": "openclaw-clickhouse",
+  "name": "openclaw-clickhouse",
   "displayName": "ClickHouse",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Connect to ClickHouse databases - list databases, tables, run queries, and insert data",
   "author": "unsanction",
   "main": "dist/index.js",

@@ -30,18 +30,27 @@ export interface PluginContext {
 }
 
 export async function activate(context: PluginContext): Promise<void> {
-  const { config, api } = context;
+  const { config, api } = context || {};
+
+  // Helper for safe logging
+  const log = (level: "info" | "warn" | "error", message: string) => {
+    if (api?.log) {
+      api.log(level, message);
+    } else {
+      console.log(`[clickhouse] [${level}] ${message}`);
+    }
+  };
 
   // Resolve config with defaults
-  const resolvedConfig = resolveConfig(config);
+  const resolvedConfig = resolveConfig(config || {});
 
   // Initialize ClickHouse client
   try {
     initClient(resolvedConfig);
-    api.log("info", `Connected to ClickHouse at ${resolvedConfig.host}:${resolvedConfig.port}`);
+    log("info", `Connected to ClickHouse at ${resolvedConfig.host}:${resolvedConfig.port}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    api.log("error", `Failed to initialize ClickHouse client: ${message}`);
+    log("error", `Failed to initialize ClickHouse client: ${message}`);
     throw error;
   }
 
@@ -78,33 +87,37 @@ export async function activate(context: PluginContext): Promise<void> {
   for (const tool of tools) {
     // Skip insert tool if in readonly mode
     if (tool.operation === "insert" && isReadonly()) {
-      api.log("info", `Skipping ${tool.definition.name} tool (readonly mode)`);
+      log("info", `Skipping ${tool.definition.name} tool (readonly mode)`);
       continue;
     }
 
     // Check if operation is allowed by configuration
     if (!isOperationAllowed(tool.operation)) {
-      api.log("info", `Skipping ${tool.definition.name} tool (not in allowedOperations)`);
+      log("info", `Skipping ${tool.definition.name} tool (not in allowedOperations)`);
       continue;
     }
 
-    api.registerTool({
-      name: tool.definition.name,
-      description: tool.definition.description,
-      inputSchema: tool.definition.inputSchema,
-      handler: tool.handler,
-    });
+    if (api?.registerTool) {
+      api.registerTool({
+        name: tool.definition.name,
+        description: tool.definition.description,
+        inputSchema: tool.definition.inputSchema,
+        handler: tool.handler,
+      });
+    }
 
-    api.log("info", `Registered tool: ${tool.definition.name}`);
+    log("info", `Registered tool: ${tool.definition.name}`);
   }
 
   // Register cleanup handler
-  api.on("session_end", async () => {
-    await closeClient();
-    api.log("info", "ClickHouse client closed");
-  });
+  if (api?.on) {
+    api.on("session_end", async () => {
+      await closeClient();
+      log("info", "ClickHouse client closed");
+    });
+  }
 
-  api.log("info", `OpenClaw ClickHouse plugin activated (readonly: ${resolvedConfig.readonly})`);
+  log("info", `OpenClaw ClickHouse plugin activated (readonly: ${resolvedConfig.readonly})`);
 }
 
 export async function deactivate(): Promise<void> {
