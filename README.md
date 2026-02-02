@@ -7,19 +7,19 @@ Connect your AI agent to ClickHouse databases. List databases, explore tables, r
 ### Option 1: From npm (Recommended)
 
 ```bash
-openclaw plugins install @unstanction/openclaw-clickhouse
+openclaw plugins install @unsanction/openclaw-clickhouse
 ```
 
 ### Option 2: From GitHub
 
 ```bash
-openclaw plugins install github:unstanction/openclaw-clickhouse
+openclaw plugins install github:unsanction/openclaw-clickhouse
 ```
 
 ### Option 3: Local Development
 
 ```bash
-git clone https://github.com/unstanction/openclaw-clickhouse.git
+git clone https://github.com/unsanction/openclaw-clickhouse.git
 cd openclaw-clickhouse
 npm install
 npm run build
@@ -258,7 +258,7 @@ Prompt your agent:
 
 ```bash
 # Clone the repository
-git clone https://github.com/unstanction/openclaw-clickhouse.git
+git clone https://github.com/unsanction/openclaw-clickhouse.git
 cd openclaw-clickhouse
 
 # Install dependencies

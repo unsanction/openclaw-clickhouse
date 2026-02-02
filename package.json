@@ -1,5 +1,5 @@
 {
-  "name": "@unstanction/openclaw-clickhouse",
+  "name": "@c0pilot/openclaw-clickhouse",
   "version": "1.0.0",
   "description": "OpenClaw plugin for ClickHouse database integration",
   "main": "dist/index.js",
@@ -20,16 +20,16 @@
     "ai",
     "agent"
   ],
-  "author": "unstanction",
+  "author": "unsanction",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/unstanction/openclaw-clickhouse.git"
+    "url": "git+https://github.com/unsanction/openclaw-clickhouse.git"
   },
   "bugs": {
-    "url": "https://github.com/unstanction/openclaw-clickhouse/issues"
+    "url": "https://github.com/unsanction/openclaw-clickhouse/issues"
   },
-  "homepage": "https://github.com/unstanction/openclaw-clickhouse#readme",
+  "homepage": "https://github.com/unsanction/openclaw-clickhouse#readme",
   "dependencies": {
     "@clickhouse/client": "^1.0.0"
   },
@@ -40,6 +40,8 @@
     "node": ">=18.0.0"
   },
   "openclaw": {
-    "extensions": ["dist/index.js"]
+    "extensions": [
+      "dist/index.js"
+    ]
   }
 }

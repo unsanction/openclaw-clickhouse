@@ -4,7 +4,7 @@
   "displayName": "ClickHouse",
   "version": "1.0.0",
   "description": "Connect to ClickHouse databases - list databases, tables, run queries, and insert data",
-  "author": "unstanction",
+  "author": "unsanction",
   "main": "dist/index.js",
   "configSchema": {
     "type": "object",
@@ -47,7 +47,13 @@
         "type": "array",
         "items": {
           "type": "string",
-          "enum": ["select", "insert", "listDatabases", "listTables", "describeTable"]
+          "enum": [
+            "select",
+            "insert",
+            "listDatabases",
+            "listTables",
+            "describeTable"
+          ]
         },
         "description": "List of allowed operations. If not specified, all operations are allowed based on readonly setting"
       },
@@ -57,6 +63,8 @@
         "description": "Query timeout in milliseconds"
       }
     },
-    "required": ["host"]
+    "required": [
+      "host"
+    ]
   }
 }
