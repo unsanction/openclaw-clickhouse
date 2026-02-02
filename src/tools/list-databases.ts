@@ -6,9 +6,9 @@ export const listDatabasesToolDefinition = {
   description:
     "List all available databases in the ClickHouse server. Returns the name of each database.",
   inputSchema: {
-    type: "object" as const,
+    type: "object",
     properties: {},
-    required: [],
+    additionalProperties: false,
   },
 };
 

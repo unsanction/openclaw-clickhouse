@@ -6,7 +6,7 @@ export const insertDataToolDefinition = {
   description:
     "Insert data into a ClickHouse table. Only available when readonly mode is disabled. Data should be provided as an array of objects where keys match column names.",
   inputSchema: {
-    type: "object" as const,
+    type: "object",
     properties: {
       database: {
         type: "string",
@@ -27,6 +27,7 @@ export const insertDataToolDefinition = {
       },
     },
     required: ["table", "data"],
+    additionalProperties: false,
   },
 };
 
@@ -36,7 +37,7 @@ interface InsertDataInput {
   data: Record<string, unknown>[];
 }
 
-export async function insertData(input: InsertDataInput): Promise<ToolResult> {
+export async function insertData(input: InsertDataInput | unknown): Promise<ToolResult> {
   // Check readonly mode first
   if (isReadonly()) {
     return {
@@ -63,8 +64,25 @@ export async function insertData(input: InsertDataInput): Promise<ToolResult> {
     };
   }
 
+  const params = input as Record<string, unknown>;
+  const table = params?.table as string;
+  const data = params?.data as Record<string, unknown>[];
+  const database = params?.database as string | undefined;
+
+  if (!table) {
+    return {
+      content: [
+        {
+          type: "text",
+          text: "Error: table parameter is required",
+        },
+      ],
+      isError: true,
+    };
+  }
+
   // Validate input
-  if (!Array.isArray(input.data) || input.data.length === 0) {
+  if (!Array.isArray(data) || data.length === 0) {
     return {
       content: [
         {
@@ -77,7 +95,7 @@ export async function insertData(input: InsertDataInput): Promise<ToolResult> {
   }
 
   try {
-    await insert(input.table, input.data, input.database);
+    await insert(table, data, database);
 
     return {
       content: [
@@ -86,9 +104,9 @@ export async function insertData(input: InsertDataInput): Promise<ToolResult> {
           text: JSON.stringify(
             {
               success: true,
-              table: input.table,
-              database: input.database || "default",
-              rows_inserted: input.data.length,
+              table,
+              database: database || "default",
+              rows_inserted: data.length,
             },
             null,
             2

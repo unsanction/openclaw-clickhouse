@@ -6,7 +6,7 @@ export const listTablesToolDefinition = {
   description:
     "List tables in a ClickHouse database. Returns table name, engine, row count, and size. Can filter tables using a LIKE pattern.",
   inputSchema: {
-    type: "object" as const,
+    type: "object",
     properties: {
       database: {
         type: "string",
@@ -19,7 +19,7 @@ export const listTablesToolDefinition = {
           "Optional LIKE pattern to filter table names (e.g., '%logs%')",
       },
     },
-    required: [],
+    additionalProperties: false,
   },
 };
 
@@ -28,7 +28,7 @@ interface ListTablesInput {
   like?: string;
 }
 
-export async function listTables(input: ListTablesInput): Promise<ToolResult> {
+export async function listTables(input: ListTablesInput | unknown): Promise<ToolResult> {
   if (!isOperationAllowed("listTables")) {
     return {
       content: [
@@ -42,8 +42,10 @@ export async function listTables(input: ListTablesInput): Promise<ToolResult> {
   }
 
   try {
+    const params = input as Record<string, unknown>;
     const config = getConfig();
-    const database = input.database || config.database;
+    const database = (params?.database as string) || config.database;
+    const like = params?.like as string | undefined;
 
     let sql = `
       SELECT
@@ -56,9 +58,9 @@ export async function listTables(input: ListTablesInput): Promise<ToolResult> {
       WHERE database = '${database}'
     `;
 
-    if (input.like) {
+    if (like) {
       // Escape single quotes in the pattern
-      const escapedLike = input.like.replace(/'/g, "''");
+      const escapedLike = like.replace(/'/g, "''");
       sql += ` AND name LIKE '${escapedLike}'`;
     }
 

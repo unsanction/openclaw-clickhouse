@@ -6,7 +6,7 @@ export const describeTableToolDefinition = {
   description:
     "Get the schema/structure of a ClickHouse table. Returns column names, types, default values, comments, and key information.",
   inputSchema: {
-    type: "object" as const,
+    type: "object",
     properties: {
       database: {
         type: "string",
@@ -19,6 +19,7 @@ export const describeTableToolDefinition = {
       },
     },
     required: ["table"],
+    additionalProperties: false,
   },
 };
 
@@ -28,7 +29,7 @@ interface DescribeTableInput {
 }
 
 export async function describeTable(
-  input: DescribeTableInput
+  input: DescribeTableInput | unknown
 ): Promise<ToolResult> {
   if (!isOperationAllowed("describeTable")) {
     return {
@@ -43,9 +44,22 @@ export async function describeTable(
   }
 
   try {
+    const params = input as Record<string, unknown>;
     const config = getConfig();
-    const database = input.database || config.database;
-    const table = input.table;
+    const database = (params?.database as string) || config.database;
+    const table = params?.table as string;
+
+    if (!table) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "Error: table parameter is required",
+          },
+        ],
+        isError: true,
+      };
+    }
 
     // Escape single quotes
     const escapedDatabase = database.replace(/'/g, "''");

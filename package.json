@@ -1,6 +1,6 @@
 {
   "name": "@c0pilot/openclaw-clickhouse",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "OpenClaw plugin for ClickHouse database integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

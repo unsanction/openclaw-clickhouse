@@ -6,7 +6,7 @@ export const runQueryToolDefinition = {
   description:
     "Execute a SQL query against ClickHouse. In readonly mode, only SELECT queries are allowed. Returns query results as JSON.",
   inputSchema: {
-    type: "object" as const,
+    type: "object",
     properties: {
       query: {
         type: "string",
@@ -19,6 +19,7 @@ export const runQueryToolDefinition = {
       },
     },
     required: ["query"],
+    additionalProperties: false,
   },
 };
 
@@ -49,7 +50,7 @@ function isModifyingQuery(sql: string): boolean {
   return MODIFYING_PATTERNS.some((pattern) => pattern.test(sql));
 }
 
-export async function runQuery(input: RunQueryInput): Promise<ToolResult> {
+export async function runQuery(input: RunQueryInput | unknown): Promise<ToolResult> {
   if (!isOperationAllowed("select")) {
     return {
       content: [
@@ -62,7 +63,24 @@ export async function runQuery(input: RunQueryInput): Promise<ToolResult> {
     };
   }
 
-  const sql = input.query.trim();
+  // Handle different input formats
+  const params = input as Record<string, unknown>;
+  const queryStr = params?.query as string;
+
+  if (!queryStr) {
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Error: query parameter is required. Received: ${JSON.stringify(input)}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+
+  const sql = queryStr.trim();
+  const database = params?.database as string | undefined;
 
   // Check if query is modifying and we're in readonly mode
   if (isReadonly() && isModifyingQuery(sql)) {
@@ -78,7 +96,7 @@ export async function runQuery(input: RunQueryInput): Promise<ToolResult> {
   }
 
   try {
-    const result = await query<Record<string, unknown>>(sql, input.database);
+    const result = await query<Record<string, unknown>>(sql, database);
 
     return {
       content: [

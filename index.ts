@@ -17,8 +17,8 @@ interface PluginAPI {
   registerTool(definition: {
     name: string;
     description: string;
-    inputSchema: object;
-    handler: (input: unknown) => Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }>;
+    parameters: object;
+    execute: (...args: unknown[]) => Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }>;
   }): void;
   on(event: string, handler: () => void | Promise<void>): void;
   log(level: "info" | "warn" | "error", message: string): void;
@@ -29,8 +29,16 @@ export interface PluginContext {
   api: PluginAPI;
 }
 
-export async function activate(context: PluginContext): Promise<void> {
-  const { config, api } = context || {};
+export async function activate(...args: unknown[]): Promise<void> {
+  // Extract config and api from OpenClaw plugin context
+  // OpenClaw passes: { id, name, version, config, pluginConfig, logger, registerTool, on, ... }
+  const ctx = args[0] as Record<string, unknown> | undefined;
+
+  // pluginConfig contains the user's plugin configuration from openclaw.json
+  const config: ClickHousePluginConfig = (ctx?.pluginConfig as ClickHousePluginConfig) || {};
+
+  // The context itself has API methods like registerTool, on, logger
+  const api: PluginAPI | undefined = ctx as unknown as PluginAPI;
 
   // Helper for safe logging
   const log = (level: "info" | "warn" | "error", message: string) => {
@@ -42,44 +50,59 @@ export async function activate(context: PluginContext): Promise<void> {
   };
 
   // Resolve config with defaults
-  const resolvedConfig = resolveConfig(config || {});
+  const resolvedConfig = resolveConfig(config);
 
   // Initialize ClickHouse client
   try {
     initClient(resolvedConfig);
-    log("info", `Connected to ClickHouse at ${resolvedConfig.host}:${resolvedConfig.port}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     log("error", `Failed to initialize ClickHouse client: ${message}`);
     throw error;
   }
 
+  // Helper to extract params from OpenClaw execute args
+  // OpenClaw passes: (toolCallId, params, context, callback)
+  const extractParams = (...args: unknown[]): Record<string, unknown> => {
+    // If first arg is string (toolCallId), params are in second arg
+    if (typeof args[0] === "string" && args.length > 1) {
+      return (args[1] as Record<string, unknown>) || {};
+    }
+    // If first arg is object, it's the params
+    if (typeof args[0] === "object" && args[0] !== null) {
+      return args[0] as Record<string, unknown>;
+    }
+    return {};
+  };
+
   // Register tools based on allowed operations
   const tools = [
     {
       definition: listDatabasesToolDefinition,
-      handler: async () => listDatabases(),
+      handler: async (...args: unknown[]) => {
+        extractParams(...args);
+        return listDatabases();
+      },
       operation: "listDatabases" as const,
     },
     {
       definition: listTablesToolDefinition,
-      handler: async (input: unknown) => listTables(input as { database?: string; like?: string }),
+      handler: async (...args: unknown[]) => listTables(extractParams(...args)),
       operation: "listTables" as const,
     },
     {
       definition: describeTableToolDefinition,
-      handler: async (input: unknown) => describeTable(input as { database?: string; table: string }),
+      handler: async (...args: unknown[]) => describeTable(extractParams(...args)),
       operation: "describeTable" as const,
     },
     {
       definition: runQueryToolDefinition,
-      handler: async (input: unknown) => runQuery(input as { query: string; database?: string }),
+      handler: async (...args: unknown[]) => runQuery(extractParams(...args)),
       operation: "select" as const,
     },
     {
       definition: insertDataToolDefinition,
-      handler: async (input: unknown) =>
-        insertData(input as { database?: string; table: string; data: Record<string, unknown>[] }),
+      handler: async (...args: unknown[]) => insertData(extractParams(...args)),
       operation: "insert" as const,
     },
   ];
@@ -87,13 +110,11 @@ export async function activate(context: PluginContext): Promise<void> {
   for (const tool of tools) {
     // Skip insert tool if in readonly mode
     if (tool.operation === "insert" && isReadonly()) {
-      log("info", `Skipping ${tool.definition.name} tool (readonly mode)`);
       continue;
     }
 
     // Check if operation is allowed by configuration
     if (!isOperationAllowed(tool.operation)) {
-      log("info", `Skipping ${tool.definition.name} tool (not in allowedOperations)`);
       continue;
     }
 
@@ -101,23 +122,18 @@ export async function activate(context: PluginContext): Promise<void> {
       api.registerTool({
         name: tool.definition.name,
         description: tool.definition.description,
-        inputSchema: tool.definition.inputSchema,
-        handler: tool.handler,
+        parameters: tool.definition.inputSchema,
+        execute: tool.handler,
       });
     }
-
-    log("info", `Registered tool: ${tool.definition.name}`);
   }
 
   // Register cleanup handler
   if (api?.on) {
     api.on("session_end", async () => {
       await closeClient();
-      log("info", "ClickHouse client closed");
     });
   }
-
-  log("info", `OpenClaw ClickHouse plugin activated (readonly: ${resolvedConfig.readonly})`);
 }
 
 export async function deactivate(): Promise<void> {
