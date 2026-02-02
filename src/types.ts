@@ -6,7 +6,7 @@ export type AllowedOperation =
   | "describeTable";
 
 export interface ClickHousePluginConfig {
-  host: string;
+  host?: string;
   port?: number;
   username?: string;
   password?: string;
@@ -31,7 +31,7 @@ export interface ClickHousePluginConfigResolved {
 
 export function resolveConfig(config: ClickHousePluginConfig): ClickHousePluginConfigResolved {
   return {
-    host: config.host,
+    host: config.host ?? "localhost",
     port: config.port ?? 8123,
     username: config.username ?? "default",
     password: config.password ?? "",

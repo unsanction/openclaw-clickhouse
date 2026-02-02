@@ -2,7 +2,7 @@
   "id": "clickhouse",
   "name": "clickhouse",
   "displayName": "ClickHouse",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Connect to ClickHouse databases - list databases, tables, run queries, and insert data",
   "author": "unsanction",
   "main": "dist/index.js",
@@ -11,6 +11,7 @@
     "properties": {
       "host": {
         "type": "string",
+        "default": "localhost",
         "description": "ClickHouse server host"
       },
       "port": {
@@ -62,9 +63,6 @@
         "default": 30000,
         "description": "Query timeout in milliseconds"
       }
-    },
-    "required": [
-      "host"
-    ]
+    }
   }
 }
